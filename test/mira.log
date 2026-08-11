@@ -1,0 +1,75 @@
+08-11 18:29:00.253  6003  6033 I MiraTest: [START] codecPref=1 640x480@30 dur=6s uibc=true
+08-11 18:29:02.268  6068  6088 I MiraRTSP: RTSP server listening on port 7236
+08-11 18:29:02.272  6068  6068 I MiraCodec: bufferMode=false
+08-11 18:29:02.311  6068  6068 I MiraCodec: setSurface: surface configured=false
+08-11 18:29:03.268  6068  6104 I MiraRTSP: M1: OPTIONS from source
+08-11 18:29:03.268  6068  6104 I MiraRTSP: Sent -> OPTIONS rtsp://127.0.0.1/wfd1.0
+08-11 18:29:03.270  6003  6033 I MiraTest: [M1] OPTIONS reply 200
+08-11 18:29:03.271  6003  6033 I MiraTest: [M2] answered sink OPTIONS
+08-11 18:29:03.272  6068  6104 I MiraRTSP: Received RTSP response 200 (cseq=100)
+08-11 18:29:03.273  6068  6104 I MiraUDP : RTP socket bound on 1550
+08-11 18:29:03.273  6068  6104 I MiraRTSP: M3: GET_PARAMETER capabilities exchange
+08-11 18:29:03.273  6068  6104 I MiraRTSP: M4: sending wfd_client_rtp_ports=1550 1551
+08-11 18:29:03.273  6068  6104 I MiraRTSP: Sent -> SET_PARAMETER rtsp://127.0.0.1/wfd1.0
+08-11 18:29:03.275  6003  6033 I MiraTest: [M3] got caps hevc_advertised=true sink_rtp=1550
+08-11 18:29:03.276  6003  6033 I MiraTest: [M4] sink SET_PARAMETER answered rtp=1550
+08-11 18:29:03.276  6068  6104 I MiraRTSP: Received RTSP response 200 (cseq=100)
+08-11 18:29:03.278  6068  6104 I MiraRTSP: SET_PARAMETER audio: LPCM 00000003 00
+08-11 18:29:03.278  6068  6104 I MiraRTSP: SET_PARAMETER uibc_enabled=true (port=7237 method=2 event=00000018)
+08-11 18:29:03.279  6068  6104 I MiraUIBC: UIBC server listening on 7237
+08-11 18:29:03.279  6068  6104 I MiraRTSP: M5: SET_PARAMETER trigger=play
+08-11 18:29:03.279  6068  6104 I MiraRTSP: M6: sending SETUP client_port=1550-1551
+08-11 18:29:03.279  6068  6104 I MiraRTSP: Sent -> SETUP rtsp://127.0.0.1/wfd1.0/streamid=0
+08-11 18:29:03.280  6003  6033 I MiraTest: [M5] selection accepted
+08-11 18:29:03.280  6003  6033 I MiraTest: [M6] SETUP answered server_port=19000
+08-11 18:29:03.282  6068  6104 I MiraRTSP: Received RTSP response 200 (cseq=100)
+08-11 18:29:03.282  6068  6104 I MiraRTSP: M7: sending PLAY
+08-11 18:29:03.282  6068  6104 I MiraRTSP: Sent -> PLAY rtsp://127.0.0.1/wfd1.0/streamid=0
+08-11 18:29:03.283  6003  6033 I MiraTest: [M7] PLAY answered
+08-11 18:29:03.283  6003  6033 I MiraTest: [HANDSHAKE] done in 3030ms sink_rtp=1550 mime=video/hevc hevc_advertised=true
+08-11 18:29:03.284  6003  6033 I MiraTest: [UDP] sender port=42008 -> 127.0.0.1:1550 payload=96
+08-11 18:29:03.284  6068  6104 I MiraRTSP: Received RTSP response 200 (cseq=100)
+08-11 18:29:03.284  6068  6104 I MiraRTSP: Streaming session established with 127.0.0.1
+08-11 18:29:03.284  6068  6104 I MiraUDP : RTP receiver started on port 1550
+08-11 18:29:03.284  6003  6107 I MiraTest: [UIBC] connected to 127.0.0.1:7237
+08-11 18:29:03.285  6003  6107 I MiraTest: [UIBC] first: type=3 len=5 unknown 
+08-11 18:29:03.316  6003  6033 I MiraTest: [ENC] encoder ready video/hevc 640x480 (from 640 x 480)
+08-11 18:29:03.369  6003  6033 I MiraTest: [DUMP] frame=1 total=80 raw=0000000140010C01FFFF014000000300A0000003000003005A1B024000000001420101014000000300A0000003000003005AA0050201E1FE71B924224B9A8101
+08-11 18:29:03.371  6003  6033 I MiraTest: [DUMP] nal#0 type=32 len=24 head=40010C01FFFF014000000300A0000003
+08-11 18:29:03.371  6003  6033 I MiraTest: [DUMP] nal#1 type=33 len=35 head=420101014000000300A0000003000003
+08-11 18:29:03.371  6003  6033 I MiraTest: [DUMP] nal#2 type=34 len=9 head=4401C018C309303324
+08-11 18:29:03.374  6068  6109 I MiraCodec: feed: au len=80 h265=true surface=true codec=false
+08-11 18:29:03.374  6068  6109 I MiraCodec: configure(video/hevc) start, surface=true
+08-11 18:29:03.404  6068  6109 I MiraCodec: Decoder configured: c2.android.hevc.decoder video/hevc (1280x720) low-latency surface output
+08-11 18:29:03.408  6068  6109 I MiraCodec: drain: try-again (queued=1 rendered=0)
+08-11 18:29:03.409  6068  6109 I MiraCodec: feed: au len=8204 h265=true surface=true codec=true
+08-11 18:29:03.411  6068  6109 I MiraCodec: drain: try-again (queued=2 rendered=0)
+08-11 18:29:03.424  6068  6109 I MiraCodec: feed: au len=6817 h265=true surface=true codec=true
+08-11 18:29:03.428  6068  6109 I MiraCodec: drain: try-again (queued=3 rendered=0)
+08-11 18:29:03.459  6068  6109 I MiraCodec: feed: au len=11710 h265=true surface=true codec=true
+08-11 18:29:03.464  6068  6109 I MiraCodec: drain: try-again (queued=4 rendered=0)
+08-11 18:29:03.489  6068  6109 I MiraCodec: feed: au len=6090 h265=true surface=true codec=true
+08-11 18:29:03.490  6068  6109 I MiraCodec: drain: try-again (queued=5 rendered=0)
+08-11 18:29:03.523  6068  6109 I MiraCodec: feed: au len=12155 h265=true surface=true codec=true
+08-11 18:29:03.528  6068  6109 I MiraCodec: drain: try-again (queued=6 rendered=0)
+08-11 18:29:03.555  6068  6109 I MiraCodec: feed: au len=5982 h265=true surface=true codec=true
+08-11 18:29:03.559  6068  6109 I MiraCodec: Decoder output: 640x480
+08-11 18:29:03.561  6068  6109 I MiraCodec: render #1 pts=871772537 size=1 flags=0
+08-11 18:29:03.589  6068  6109 I MiraCodec: feed: au len=8727 h265=true surface=true codec=true
+08-11 18:29:03.624  6068  6109 I MiraCodec: render #2 pts=871838993 size=1 flags=0
+08-11 18:29:03.692  6068  6109 I MiraCodec: render #3 pts=871904942 size=1 flags=0
+08-11 18:29:03.755  6068  6109 I MiraCodec: render #4 pts=871969023 size=1 flags=0
+08-11 18:29:03.822  6068  6109 I MiraCodec: render #5 pts=872035703 size=1 flags=0
+08-11 18:29:05.324  6068  6109 I MiraCodec: decoded frames queued: 60
+08-11 18:29:05.324  6003  6033 I MiraTest: [STREAM] 2s frames=60 pkts=203 bytes=224943 src_fps=30.5
+08-11 18:29:05.389  6068  6109 I MiraUDP : traffic: pkts/s=102.1 frames=61 rendered=5
+08-11 18:29:06.289  6068  6105 I MiraUIBC: UIBC client disconnected
+08-11 18:29:07.321  6003  6033 I MiraTest: [STREAM] 4s frames=120 pkts=386 bytes=432137 src_fps=30.3
+08-11 18:29:07.322  6068  6109 I MiraCodec: decoded frames queued: 120
+08-11 18:29:07.421  6068  6109 I MiraUDP : traffic: pkts/s=93.5 frames=122 rendered=5
+08-11 18:29:09.321  6003  6033 I MiraTest: [STREAM] 6s frames=180 pkts=569 bytes=642900 src_fps=30.2
+08-11 18:29:09.322  6068  6109 I MiraCodec: decoded frames queued: 180
+08-11 18:29:09.332  6003  6033 I MiraTest: [STREAM DONE] frames=180 pkts=569 bytes=642900 src_fps=30.2
+08-11 18:29:09.339  6068  6104 I MiraRTSP: TEARDOWN from source
+08-11 18:29:09.439  6003  6033 I MiraTest: SUMMARY codec=hevc w=640 h=480 src_fps=30.2 frames=180 rtp_pkts=569 rtp_bytes=642900 handshake_ms=3030 total_ms=9186 uibc_pkts=1 uibc_first=type=3 unknown 
+08-11 18:29:09.840  6068  6104 I MiraUDP : RTP receiver stopped

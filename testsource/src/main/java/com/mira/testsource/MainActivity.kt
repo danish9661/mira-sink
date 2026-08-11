@@ -163,7 +163,7 @@ class MainActivity : Activity() {
 
                 val uibcResult = UibcResult()
                 val uibcThread = if (uibcEnable) {
-                    Thread({ uibcClientLoop(uibcResult) }, "uibc-client").apply { start() }
+                    Thread({ uibcClientLoop(uibcResult, streaming) }, "uibc-client").apply { start() }
                 } else null
 
                 val streamResult = streamVideo(streaming)
@@ -182,7 +182,7 @@ class MainActivity : Activity() {
                         "w=$w h=$h src_fps=${"%.1f".format(streamResult.fps)} frames=${streamResult.frames} " +
                         "rtp_pkts=${streamResult.pkts} rtp_bytes=${streamResult.bytes} " +
                         "handshake_ms=$handshakeMs total_ms=${System.currentTimeMillis() - start} " +
-                        "uibc_pkts=${uibcResult.count} uibc_first=${uibcResult.first}"
+                        "uibc_pkts=${uibcResult.count} uibc_inputs=${uibcResult.inputs} uibc_first=${uibcResult.first}"
                 )
             } catch (t: Throwable) {
                 log("FAIL ${t.javaClass.simpleName}: ${t.message}")
@@ -339,6 +339,7 @@ class MainActivity : Activity() {
 
         private class UibcResult {
             var count = 0
+            var inputs = 0
             var first = ""
         }
 
@@ -671,16 +672,18 @@ class MainActivity : Activity() {
             }
         }
 
-        private fun uibcClientLoop(result: UibcResult) {
+        private fun uibcClientLoop(result: UibcResult, streaming: AtomicBoolean) {
             try {
                 val s = Socket(HOST, UIBC_PORT)
                 s.soTimeout = 3000
                 log("[UIBC] connected to $HOST:$UIBC_PORT")
                 val input = s.getInputStream()
                 val buf = ByteArray(4096)
-                while (true) {
+                while (streaming.get()) {
                     val n = try {
                         input.read(buf)
+                    } catch (e: java.net.SocketTimeoutException) {
+                        continue
                     } catch (t: Throwable) {
                         break
                     }
@@ -694,6 +697,7 @@ class MainActivity : Activity() {
                         var desc = "unknown"
                         var extra = ""
                         if (type == 0x00 && len >= 12) {
+                            result.inputs++
                             val x = readU32(buf, off + 7)
                             val y = readU32(buf, off + 11)
                             val name = when (evType) {
@@ -705,6 +709,9 @@ class MainActivity : Activity() {
                             }
                             desc = name
                             extra = "x=${"%.3f".format(x / 4294967295.0)} y=${"%.3f".format(y / 4294967295.0)}"
+                            if (result.inputs == 1) {
+                                log("[UIBC] first input: $desc $extra")
+                            }
                         }
                         result.count++
                         if (result.first.isEmpty()) {

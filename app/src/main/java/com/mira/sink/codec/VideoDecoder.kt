@@ -350,10 +350,10 @@ class VideoDecoder {
             videoHeight = h
             Log.i(TAG, "Stream dimensions: ${w}x$h")
             StatusBus.update(
-                SinkState(
-                    Phase.STREAMING,
-                    "Streaming",
-                    "${mimeLabel(currentMime)} ${w}x$h"
+                StatusBus.state.copy(
+                    phase = Phase.STREAMING,
+                    message = "Streaming",
+                    detail = "${mimeLabel(currentMime)} ${w}x$h"
                 )
             )
         }

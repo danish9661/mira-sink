@@ -6,4 +6,4 @@ local.properties
 .DS_Store
 captures/
 emulator-screenshot.png
-test/
+test/*.log

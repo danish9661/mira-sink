@@ -80,7 +80,9 @@ class MiracastService : Service() {
             rtp.bindRtcp(rtp.boundPort + 1)
             rtp.start()
             acquireWakelock()
-            StatusBus.update(SinkState(Phase.STREAMING, "Streaming", ""))
+            StatusBus.update(
+                StatusBus.state.copy(phase = Phase.STREAMING, message = "Streaming", detail = "")
+            )
         }
 
         override fun setUibcEnabled(enabled: Boolean) {

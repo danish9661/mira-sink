@@ -5,7 +5,7 @@
 
     <application
         android:label="Mira Test Source"
-        android:icon="@android:drawable/sym_def_app_icon"
+        android:icon="@mipmap/ic_launcher"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:allowBackup="false">
 

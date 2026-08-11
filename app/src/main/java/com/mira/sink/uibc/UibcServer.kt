@@ -1,5 +1,7 @@
 package com.mira.sink.uibc
 
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.Log
 import com.mira.sink.StatusBus
 import java.io.IOException
@@ -40,6 +42,8 @@ class UibcServer(private val port: Int) {
 
     private var thread: Thread? = null
     private val lock = Any()
+    private var senderThread: HandlerThread? = null
+    private var sender: Handler? = null
 
     @Volatile
     var connected = false
@@ -48,6 +52,10 @@ class UibcServer(private val port: Int) {
     fun start() {
         synchronized(lock) {
             if (running) return
+            if (sender == null) {
+                senderThread = HandlerThread("uibc-sender").apply { start() }
+                sender = Handler(senderThread!!.looper)
+            }
             try {
                 val ss = ServerSocket()
                 ss.reuseAddress = true
@@ -166,22 +174,25 @@ class UibcServer(private val port: Int) {
     }
 
     private fun sendPacket(type: Int, payload: ByteArray) {
-        val out = output ?: return
-        val packet = ByteArray(payload.size + 4)
-        packet[0] = 0x01
-        packet[1] = type.toByte()
-        val totalLen = packet.size
-        packet[2] = (totalLen ushr 8).toByte()
-        packet[3] = totalLen.toByte()
-        System.arraycopy(payload, 0, packet, 4, payload.size)
-        try {
-            synchronized(lock) {
-                out.write(packet)
-                out.flush()
+        val h = sender ?: return
+        h.post {
+            val out = output ?: return@post
+            val packet = ByteArray(payload.size + 4)
+            packet[0] = 0x01
+            packet[1] = type.toByte()
+            val totalLen = packet.size
+            packet[2] = (totalLen ushr 8).toByte()
+            packet[3] = totalLen.toByte()
+            System.arraycopy(payload, 0, packet, 4, payload.size)
+            try {
+                synchronized(lock) {
+                    out.write(packet)
+                    out.flush()
+                }
+            } catch (t: IOException) {
+                Log.w(TAG, "UIBC send failed", t)
+                connected = false
             }
-        } catch (t: IOException) {
-            Log.w(TAG, "UIBC send failed", t)
-            connected = false
         }
     }
 
@@ -203,6 +214,9 @@ class UibcServer(private val port: Int) {
         }
         thread?.join(1500)
         thread = null
+        senderThread?.quitSafely()
+        senderThread = null
+        sender = null
         Log.i(TAG, "UIBC server stopped")
     }
 }

@@ -70,6 +70,14 @@ export JAVA_HOME=/opt/android-studio/jbr
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+### Signing (temporary)
+
+Release builds are signed with a **temporary random keystore** committed at
+`keystore/mira-release.keystore` (passwords in `keystore.properties`). This is so CI
+artifacts are installable during development. **Replace it with a personal keystore before
+any public release** — generate one with `keytool`, update `keystore.properties`, and remove
+the temp files from the repo.
+
 ## testsource (dev-only module)
 
 `testsource` is a synthetic **fake Miracast source** used for loopback testing without a real PC:

@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.MediaStore
+import android.provider.Settings
 import android.view.Surface
 import android.view.TextureView
 import android.view.View
@@ -104,6 +105,10 @@ class MainActivity : Activity(), StatusListener {
             generateReport()
         }
 
+        findViewById<Button>(R.id.wfdButton).setOnClickListener {
+            requestWfdEnable()
+        }
+
         StatusBus.addListener(this)
         requestRuntimePermissions()
     }
@@ -135,6 +140,45 @@ class MainActivity : Activity(), StatusListener {
             StatusBus.log("Permissions: " +
                 permissions.zip(grantResults.toList())
                     .joinToString { "${it.first}: ${if (it.second == 0) "granted" else "denied"}" })
+        }
+    }
+
+    private fun requestWfdEnable() {
+        if (Settings.System.canWrite(this)) {
+            applyWfdEnable()
+        } else {
+            pendingWfdEnable = true
+            Toast.makeText(this, "Grant 'Modify system settings' for Wi-Fi Display", Toast.LENGTH_LONG).show()
+            startActivity(
+                Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName"))
+            )
+        }
+    }
+
+    private fun applyWfdEnable() {
+        try {
+            val ok = Settings.Global.putInt(contentResolver, "wifi_display_on", 1)
+            val now = Settings.Global.getInt(contentResolver, "wifi_display_on", -1)
+            if (ok && now == 1) {
+                StatusBus.log("Wi-Fi Display advertisement enabled (wifi_display_on=1)")
+                Toast.makeText(this, "WFD enabled — device should now appear in Windows cast list", Toast.LENGTH_LONG).show()
+            } else {
+                StatusBus.log("wifi_display_on write returned ok=$ok value=$now")
+                Toast.makeText(this, "WFD write failed (ok=$ok, value=$now)", Toast.LENGTH_LONG).show()
+            }
+        } catch (t: Throwable) {
+            StatusBus.log("wifi_display_on write failed: ${t.message}")
+            Toast.makeText(this, "WFD write failed: ${t.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private var pendingWfdEnable = false
+
+    override fun onResume() {
+        super.onResume()
+        if (pendingWfdEnable && Settings.System.canWrite(this)) {
+            pendingWfdEnable = false
+            applyWfdEnable()
         }
     }
 

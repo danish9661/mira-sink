@@ -6,4 +6,5 @@
     <string name="status_group_ready">Group ready — press Win+P → Connect on your PC</string>
     <string name="btn_reset">Reset</string>
     <string name="btn_report">Report</string>
+    <string name="btn_wfd">Enable WFD</string>
 </resources>

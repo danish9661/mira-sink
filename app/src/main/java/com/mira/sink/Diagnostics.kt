@@ -69,6 +69,7 @@ object Diagnostics {
         sb.appendLine()
 
         sb.appendLine("---- System settings ----")
+        sb.appendLine("canWriteSettings: ${Settings.System.canWrite(context)}")
         for (key in listOf("wifi_display_on", "wifi_display_wps_config", "wifi_direct_supported")) {
             sb.appendLine("Settings.Global $key = ${safeSetting(context, key)}")
         }

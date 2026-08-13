@@ -3,6 +3,7 @@ package com.mira.sink
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -144,32 +145,38 @@ class MainActivity : Activity(), StatusListener {
     }
 
     private fun requestWfdEnable() {
-        if (Settings.System.canWrite(this)) {
-            applyWfdEnable()
-        } else {
-            pendingWfdEnable = true
-            Toast.makeText(this, "Grant 'Modify system settings' for Wi-Fi Display", Toast.LENGTH_LONG).show()
-            startActivity(
-                Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName"))
-            )
+        WfdEnabler.enable(this) { ok, msg ->
+            runOnUiThread {
+                StatusBus.log("WFD enable: $msg")
+                when {
+                    ok -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                    msg == "no-route" -> promptWfdRoute()
+                    else -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 
-    private fun applyWfdEnable() {
-        try {
-            val ok = Settings.Global.putInt(contentResolver, "wifi_display_on", 1)
-            val now = Settings.Global.getInt(contentResolver, "wifi_display_on", -1)
-            if (ok && now == 1) {
-                StatusBus.log("Wi-Fi Display advertisement enabled (wifi_display_on=1)")
-                Toast.makeText(this, "WFD enabled — device should now appear in Windows cast list", Toast.LENGTH_LONG).show()
-            } else {
-                StatusBus.log("wifi_display_on write returned ok=$ok value=$now")
-                Toast.makeText(this, "WFD write failed (ok=$ok, value=$now)", Toast.LENGTH_LONG).show()
+    private fun promptWfdRoute() {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Enable Wi-Fi Display")
+            .setMessage(
+                "This phone's firmware blocks apps from enabling Wi-Fi Display advertisement directly.\n\n" +
+                "Choose a way:\n" +
+                "1) Shizuku (recommended) — install Shizuku from Play Store, start it once " +
+                "(pairing via Wireless debugging — no PC needed), then tap this button again.\n" +
+                "2) Grant 'Modify system settings' — may work on some phones.\n\n" +
+                "Or quick test without any install: toggle Smart View / Screen sharing ON from " +
+                "the quick settings and check if Windows sees the tablet."
+            )
+            .setPositiveButton("Grant system settings") { _, _ ->
+                startActivity(
+                    Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName"))
+                )
             }
-        } catch (t: Throwable) {
-            StatusBus.log("wifi_display_on write failed: ${t.message}")
-            Toast.makeText(this, "WFD write failed: ${t.message}", Toast.LENGTH_LONG).show()
-        }
+            .setNegativeButton("Cancel", null)
+            .create()
+        dialog.show()
     }
 
     private var pendingWfdEnable = false
@@ -178,7 +185,12 @@ class MainActivity : Activity(), StatusListener {
         super.onResume()
         if (pendingWfdEnable && Settings.System.canWrite(this)) {
             pendingWfdEnable = false
-            applyWfdEnable()
+            WfdEnabler.enable(this) { ok, msg ->
+                runOnUiThread {
+                    StatusBus.log("WFD enable: $msg")
+                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 

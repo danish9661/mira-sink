@@ -70,9 +70,9 @@ object Diagnostics {
 
         sb.appendLine("---- System settings ----")
         sb.appendLine("canWriteSettings: ${Settings.System.canWrite(context)}")
-        for (key in listOf("wifi_display_on", "wifi_display_wps_config", "wifi_direct_supported")) {
-            sb.appendLine("Settings.Global $key = ${safeSetting(context, key)}")
-        }
+        sb.appendLine("shizukuInstalled: ${WfdEnabler.shizukuInstalled()}")
+        sb.appendLine("shizukuReady: ${WfdEnabler.shizukuReady()}")
+        sb.appendLine("wifi_display_on: ${WfdEnabler.currentValue(context)}")
         sb.appendLine()
 
         sb.appendLine("---- WiFi ----")

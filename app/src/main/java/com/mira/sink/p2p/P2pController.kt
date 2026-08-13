@@ -40,6 +40,26 @@ class P2pController(private val context: Context) {
     @Volatile
     private var registered = false
 
+    @Volatile
+    var wfdInfoAttached = false
+        private set
+
+    @Volatile
+    var wfdInfoError = ""
+        private set
+
+    @Volatile
+    var p2pEnabled = false
+        private set
+
+    @Volatile
+    var channelLost = false
+        private set
+
+    @Volatile
+    var lastGroupFailure = ""
+        private set
+
     private var groupSsid = ""
     private var groupPassphrase = ""
     private var groupInterface = ""
@@ -55,6 +75,7 @@ class P2pController(private val context: Context) {
                     val enabled = intent.getIntExtra(
                         WifiP2pManager.EXTRA_WIFI_STATE, -1
                     ) == WifiP2pManager.WIFI_P2P_STATE_ENABLED
+                    p2pEnabled = enabled
                     Log.i(TAG, "P2P state changed: enabled=$enabled")
                     if (enabled && !groupCreated) ensureGroup()
                 }
@@ -98,6 +119,7 @@ class P2pController(private val context: Context) {
     fun initialize() {
         thread.start()
         channel = manager.initialize(context, thread.looper) {
+            channelLost = true
             Log.w(TAG, "P2P init channel lost")
         }
         if (!registered) {
@@ -113,6 +135,7 @@ class P2pController(private val context: Context) {
         }
         channel?.let { ch ->
             manager.requestP2pState(ch) { state ->
+                p2pEnabled = state == WifiP2pManager.WIFI_P2P_STATE_ENABLED
                 Log.i(TAG, "Initial P2P state: $state")
                 if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) ensureGroup()
             }
@@ -140,6 +163,7 @@ class P2pController(private val context: Context) {
                     }
 
                     override fun onFailure(reason: Int) {
+                        lastGroupFailure = "createGroup(5GHz) reason=$reason"
                         Log.w(TAG, "createGroup(5GHz) failed reason=$reason, falling back to legacy")
                         StatusBus.log("5GHz group creation failed (reason=$reason), retrying on 2.4GHz")
                         createGroupLegacy()
@@ -147,6 +171,7 @@ class P2pController(private val context: Context) {
                 })
                 return
             } catch (t: Throwable) {
+                lastGroupFailure = "createGroup(5GHz) threw: ${t.message}"
                 Log.w(TAG, "createGroup with 5GHz config failed, falling back to 2.4GHz", t)
                 StatusBus.log("5GHz group creation failed: ${t.message}")
             }
@@ -159,6 +184,7 @@ class P2pController(private val context: Context) {
         try {
             manager.createGroup(ch, actionListener("createGroup(legacy)"))
         } catch (t: Throwable) {
+            lastGroupFailure = "createGroup(legacy) threw: ${t.message}"
             Log.e(TAG, "createGroup failed", t)
             StatusBus.update(SinkState(Phase.ERROR, "P2P group creation failed", t.message ?: ""))
         }
@@ -166,17 +192,22 @@ class P2pController(private val context: Context) {
 
     private fun attachWfdInfo(config: WifiP2pConfig) {
         try {
-            val constructor = WifiP2pWfdInfo::class.java.getConstructor(
-                Boolean::class.javaPrimitiveType,
-                Int::class.javaPrimitiveType,
-                Boolean::class.javaPrimitiveType
-            )
-            val wfd = constructor.newInstance(true, WifiP2pWfdInfo.DEVICE_TYPE_SECONDARY_SINK, true)
-            val wfdType = WifiP2pWfdInfo::class.java
-            config.javaClass.getMethod("setWfdInfo", wfdType).invoke(config, wfd)
-            Log.i(TAG, "WFD info attached to group config")
+            val wfd = WifiP2pWfdInfo().apply {
+                setEnabled(true)
+                setDeviceType(WifiP2pWfdInfo.DEVICE_TYPE_SECONDARY_SINK)
+                setSessionAvailable(true)
+            }
+            config.javaClass.getMethod("setWfdInfo", WifiP2pWfdInfo::class.java).invoke(config, wfd)
+            val readBack = config.javaClass.getMethod("getWfdInfo").invoke(config)
+            wfdInfoAttached = true
+            wfdInfoError = ""
+            Log.i(TAG, "WFD info attached to group config: $readBack")
+            StatusBus.log("WFD info attached to group config: $readBack")
         } catch (t: Throwable) {
-            Log.w(TAG, "setWfdInfo unavailable on this build", t)
+            wfdInfoAttached = false
+            wfdInfoError = t.message ?: t.javaClass.simpleName
+            Log.w(TAG, "setWfdInfo unavailable on this build (hidden API blocked?)", t)
+            StatusBus.log("WFD info NOT attached: ${t.message ?: t.javaClass.simpleName}")
         }
     }
 
@@ -197,6 +228,7 @@ class P2pController(private val context: Context) {
         }
 
         override fun onFailure(reason: Int) {
+            lastGroupFailure = "$tag reason=$reason"
             Log.e(TAG, "$tag failure reason=$reason")
             StatusBus.update(
                 SinkState(

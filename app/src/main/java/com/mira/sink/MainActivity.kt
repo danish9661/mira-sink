@@ -8,16 +8,20 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.content.ContentValues
 import android.graphics.Color
 import android.graphics.SurfaceTexture
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.MediaStore
 import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import com.mira.sink.uibc.TouchOverlayView
 
 class MainActivity : Activity(), StatusListener {
@@ -96,6 +100,10 @@ class MainActivity : Activity(), StatusListener {
             service?.resetSession()
         }
 
+        findViewById<Button>(R.id.reportButton).setOnClickListener {
+            generateReport()
+        }
+
         StatusBus.addListener(this)
         requestRuntimePermissions()
     }
@@ -128,6 +136,53 @@ class MainActivity : Activity(), StatusListener {
                 permissions.zip(grantResults.toList())
                     .joinToString { "${it.first}: ${if (it.second == 0) "granted" else "denied"}" })
         }
+    }
+
+    private fun generateReport() {
+        val report = Diagnostics.buildReport(this, service?.p2pController())
+        Thread {
+            try {
+                val uri = saveReport(report)
+                runOnUiThread {
+                    Toast.makeText(this, "Report saved, sharing…", Toast.LENGTH_SHORT).show()
+                    shareReport(uri)
+                }
+            } catch (t: Throwable) {
+                runOnUiThread {
+                    Toast.makeText(this, "Report failed: ${t.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
+    }
+
+    private fun saveReport(report: String): Uri {
+        val name = "mira_report_${System.currentTimeMillis()}.txt"
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/Mira")
+        }
+        val resolver = contentResolver
+        val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI
+        } else {
+            MediaStore.Files.getContentUri("external")
+        }
+        val uri = resolver.insert(collection, values)
+            ?: throw IllegalStateException("MediaStore insert failed")
+        resolver.openOutputStream(uri)?.use { it.write(report.toByteArray()) }
+            ?: throw IllegalStateException("openOutputStream failed")
+        return uri
+    }
+
+    private fun shareReport(uri: Uri) {
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            putExtra(Intent.EXTRA_SUBJECT, "Mira Sink diagnostic report")
+        }
+        startActivity(Intent.createChooser(send, "Share diagnostic report"))
     }
 
     override fun onStart() {

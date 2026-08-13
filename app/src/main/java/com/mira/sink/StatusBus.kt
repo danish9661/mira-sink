@@ -66,4 +66,6 @@ object StatusBus {
             for (l in listeners) l.onLog(line)
         }
     }
+
+    fun logTail(): List<String> = synchronized(logTail) { logTail.toList() }
 }

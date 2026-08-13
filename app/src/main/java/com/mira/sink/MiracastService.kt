@@ -185,6 +185,8 @@ class MiracastService : Service() {
 
     fun uiibcServer(): UibcServer = uibc
 
+    fun p2pController(): P2pController = p2p
+
     fun resetSession() {
         Log.i(TAG, "Reset requested")
         rtp.stop()

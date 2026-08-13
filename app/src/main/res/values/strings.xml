@@ -5,4 +5,5 @@
     <string name="status_p2p_wait">Turning on Wi-Fi Direct…</string>
     <string name="status_group_ready">Group ready — press Win+P → Connect on your PC</string>
     <string name="btn_reset">Reset</string>
+    <string name="btn_report">Report</string>
 </resources>
